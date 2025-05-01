@@ -3,6 +3,7 @@ using Tubes_KPL.Controller;
 using Tubes_KPL.Model;
 using Tubes_KPL.Manager;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Tubes_KPL
 {
@@ -33,6 +34,7 @@ namespace Tubes_KPL
                         string regPassword = Console.ReadLine() ?? "";
                         userController.Register(regUsername, regPassword);
                         break;
+
                     case "2":
                         Console.Write("Masukkan username untuk login: ");
                         string loginUsername = Console.ReadLine() ?? "";
@@ -55,7 +57,8 @@ namespace Tubes_KPL
                                 Console.WriteLine("2. Lihat Daftar Tugas Saya");
                                 Console.WriteLine("3. Edit Tugas");
                                 Console.WriteLine("4. Hapus Tugas");
-                                Console.WriteLine("5. Logout");
+                                Console.WriteLine("5. Tandai Tugas Selesai");
+                                Console.WriteLine("6. Logout");
                                 Console.Write("Pilih opsi: ");
 
                                 string loggedInChoice = Console.ReadLine() ?? "";
@@ -91,6 +94,7 @@ namespace Tubes_KPL
 
                                         createTaskControllerForUser.CreateTask(taskName, taskDeskripsi, deadline, loggedInUsername);
                                         break;
+
                                     case "2":
                                         Console.WriteLine("\n=== Daftar Tugas Anda ===");
                                         List<Model.Task> userTasks = createTaskControllerForUser.GetTasks(loggedInUsername);
@@ -102,17 +106,16 @@ namespace Tubes_KPL
                                         {
                                             foreach (var task in userTasks)
                                             {
-                                                // Menampilkan detail tugas, termasuk ID-nya.
-                                                Console.WriteLine($"Nama: {task.Name}, Deskripsi: {task.Description}, Deadline: {task.Deadline}");
+                                                Console.WriteLine($"Nama: {task.Name}, Deskripsi: {task.Description}, Deadline: {task.Deadline}, Status: {task.Status}");
                                             }
                                         }
                                         break;
+
                                     case "3":
                                         Console.WriteLine("\n=== Edit Tugas ===");
                                         Console.Write("Masukkan Nama tugas yang ingin diedit: ");
                                         string taskNameToEdit = Console.ReadLine() ?? "";
-                                        // Pastikan user tahu ID yang mana yang harus dimasukkan
-                                        Console.WriteLine("Masukkan Nama tugas yang ingin diedit (lihat daftar tugas untuk Nama Tugas).");
+
                                         Console.Write("Nama baru (kosongkan jika tidak ingin mengubah): ");
                                         string newName = Console.ReadLine();
 
@@ -121,7 +124,6 @@ namespace Tubes_KPL
 
                                         Console.Write("Ubah deadline? (y/n): ");
                                         string changeDeadline = Console.ReadLine() ?? "";
-
                                         Deadline newDeadline = null;
                                         if (changeDeadline.ToLower() == "y")
                                         {
@@ -137,21 +139,29 @@ namespace Tubes_KPL
                                             int minute = int.Parse(Console.ReadLine() ?? "0");
                                             newDeadline = new Deadline { Day = day, Month = month, Year = year, Hour = hour, Minute = minute };
                                         }
+
                                         createTaskControllerForUser.EditTask(taskNameToEdit, loggedInUsername, newName, newDesc, newDeadline);
                                         break;
+
                                     case "4":
                                         Console.WriteLine("\n=== Hapus Tugas ===");
                                         Console.Write("Masukkan nama tugas yang ingin dihapus: ");
                                         string taskNameToDelete = Console.ReadLine() ?? "";
-
-                                        // Pass the taskNameToDelete and loggedInUsername to the controller
                                         createTaskControllerForUser.DeleteTask(taskNameToDelete, loggedInUsername);
                                         break;
 
                                     case "5":
+                                        Console.WriteLine("\n=== Tandai Tugas Selesai ===");
+                                        Console.Write("Masukkan nama tugas yang ingin ditandai selesai: ");
+                                        string taskToComplete = Console.ReadLine() ?? "";
+                                        createTaskControllerForUser.MarkTaskAsCompleted(taskToComplete, loggedInUsername);
+                                        break;
+
+                                    case "6":
                                         userController.Logout();
                                         loggedIn = false;
                                         break;
+
                                     default:
                                         Console.WriteLine("Opsi tidak valid. Silakan coba lagi.");
                                         break;
@@ -159,9 +169,11 @@ namespace Tubes_KPL
                             }
                         }
                         break;
+
                     case "3":
                         Console.WriteLine("Terima kasih!");
                         return;
+
                     default:
                         Console.WriteLine("Opsi tidak valid. Silakan coba lagi.");
                         break;

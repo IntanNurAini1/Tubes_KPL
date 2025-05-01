@@ -13,6 +13,13 @@ namespace Tubes_KPL.Manager
         private List<T> tasks = new List<T>();
         private readonly string _filePath = "tasks.json";
 
+        // Automata: Tabel transisi status tugas
+        private readonly Dictionary<(Status, string), Status> statusTransitions = new()
+    {
+        {(Status.Incompleted, "TandaiSelesai"), Status.Completed},
+        {(Status.Overdue, "TandaiSelesai"), Status.Completed}
+    };
+
         public CreateTaskManager()
         {
             LoadTasks();
@@ -161,6 +168,36 @@ namespace Tubes_KPL.Manager
 
                 return false; // Ensure method returns false in case of error
             }
+        }
+        public bool MarkAsCompleted(string taskName, string userId)
+        {
+            Debug.WriteLine($"[DEBUG] Menandai selesai: {taskName}, User: {userId}");
+
+            if (string.IsNullOrEmpty(taskName) || string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("Nama tugas dan userId tidak boleh kosong.");
+                return false;
+            }
+
+            var task = tasks.FirstOrDefault(t => t.Name == taskName && t.UserId == userId);
+
+            if (task == null)
+            {
+                Console.WriteLine("Tugas tidak ditemukan.");
+                return false;
+            }
+
+            if (statusTransitions.TryGetValue((task.Status, "TandaiSelesai"), out Status newStatus))
+            {
+                Debug.Assert(task.Status != Status.Completed, "Task seharusnya belum selesai.");
+                task.Status = newStatus;
+                SaveTasks();
+                Console.WriteLine("Tugas berhasil ditandai selesai!");
+                return true;
+            }
+
+            Console.WriteLine("Transisi status tidak valid.");
+            return false;
         }
 
 

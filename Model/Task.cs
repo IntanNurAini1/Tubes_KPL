@@ -9,6 +9,7 @@ namespace Tubes_KPL.Model
         public Deadline Deadline { get; set; }
         public string Id { get; set; }
         public string UserId { get; set; }
+        public Status Status { get; set; } = Status.Incompleted; // default
 
         public Task(string name, string description, Deadline deadline, string userId) // Tambah userId di constructor
         {

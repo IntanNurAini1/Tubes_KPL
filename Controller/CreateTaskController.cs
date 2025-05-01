@@ -165,6 +165,26 @@ namespace Tubes_KPL.Controller
                 Debug.WriteLine($"Exception in DeleteTask: {ex}"); // Log exception details
             }
         }
+        public void MarkTaskAsCompleted(string taskName, string userId)
+        {
+            if (string.IsNullOrEmpty(taskName) || string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("Nama tugas dan userId tidak boleh kosong.");
+                return;
+            }
+
+            try
+            {
+                bool success = taskManager.MarkAsCompleted(taskName, userId);
+                if (!success)
+                    Console.WriteLine("Gagal menandai tugas sebagai selesai.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Terjadi kesalahan: {ex.Message}");
+                Debug.WriteLine($"[DEBUG] Exception in MarkTaskAsCompleted: {ex}");
+            }
+        }
 
     }
 }
