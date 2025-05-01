@@ -115,5 +115,29 @@ namespace Tubes_KPL.Manager
                 tasks = new List<T>();
             }
         }
+
+        public bool DeleteTask(string taskName, string userId)
+        {
+            // Pre-condition: taskName dan userId tidak boleh null atau kosong
+            Debug.Assert(!string.IsNullOrEmpty(taskName), "Pre-condition: taskName tidak boleh null atau kosong dalam DeleteTask");
+            Debug.Assert(!string.IsNullOrEmpty(userId), "Pre-condition: userId tidak boleh null atau kosong dalam DeleteTask");
+
+            if (string.IsNullOrEmpty(taskName) || string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("taskName dan userId tidak boleh null atau kosong.");
+                return false;
+            }
+
+            var task = tasks.FirstOrDefault(t => t.Name == taskName && t.UserId == userId);
+            if (task != null)
+            {
+                tasks.Remove(task); // Hapus tugas dari list
+                SaveTasks(); // Simpan perubahan ke file
+                return true;
+            }
+            Console.WriteLine("Tugas tidak ditemukan.");
+            return false;
+        }
+
     }
 }

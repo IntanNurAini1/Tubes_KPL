@@ -119,5 +119,40 @@ namespace Tubes_KPL.Controller
                 Debug.WriteLine($"Exception in EditTask: {ex}");
             }
         }
+
+        public void DeleteTask(string taskName, string userId)
+        {
+            // Defensive Programming: Validasi parameter
+            if (string.IsNullOrEmpty(taskName))
+            {
+                Console.WriteLine("Nama tugas tidak boleh kosong.");
+                return;
+            }
+            if (string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("User ID tidak boleh kosong.");
+                return;
+            }
+
+            try
+            {
+                bool deleted = taskManager.DeleteTask(taskName, userId);
+                if (deleted)
+                {
+                    Console.WriteLine("Tugas berhasil dihapus!");
+                }
+                else
+                {
+                    Console.WriteLine("Tugas tidak ditemukan atau gagal dihapus.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Defensive Programming: Tangkap dan log exception
+                Console.WriteLine($"Terjadi kesalahan saat menghapus tugas: {ex.Message}");
+                Debug.WriteLine($"Exception in DeleteTask: {ex}");
+            }
+        }
+
     }
 }

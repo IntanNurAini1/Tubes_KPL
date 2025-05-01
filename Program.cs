@@ -54,7 +54,8 @@ namespace Tubes_KPL
                                 Console.WriteLine("1. Buat Tugas Baru");
                                 Console.WriteLine("2. Lihat Daftar Tugas Saya");
                                 Console.WriteLine("3. Edit Tugas");
-                                Console.WriteLine("4. Logout");
+                                Console.WriteLine("4. Hapus Tugas");
+                                Console.WriteLine("5. Logout");
                                 Console.Write("Pilih opsi: ");
 
                                 string loggedInChoice = Console.ReadLine() ?? "";
@@ -139,6 +140,14 @@ namespace Tubes_KPL
                                         createTaskControllerForUser.EditTask(taskNameToEdit, loggedInUsername, newName, newDesc, newDeadline);
                                         break;
                                     case "4":
+                                        Console.WriteLine("\n=== Hapus Tugas ===");
+                                        Console.Write("Masukkan nama tugas yang ingin dihapus: ");
+                                        string taskNameToDelete = Console.ReadLine() ?? "";
+
+                                        createTaskControllerForUser.DeleteTask(taskNameToDelete, loggedInUsername);
+                                        break;
+
+                                    case "5":
                                         userController.Logout();
                                         loggedIn = false;
                                         break;
