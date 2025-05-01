@@ -18,9 +18,8 @@ namespace Tubes_KPL
                 Console.WriteLine("1. Register");
                 Console.WriteLine("2. Login");
                 Console.WriteLine("3. Logout");
-                Console.WriteLine("4. Tambah Pengguna Manual");
-                Console.WriteLine("5. Lihat Daftar Pengguna");
-                Console.WriteLine("6. Keluar");
+                Console.WriteLine("4. Lihat Daftar Pengguna");
+                Console.WriteLine("5. Keluar");
                 Console.Write("Pilih opsi: ");
 
                 string choice = Console.ReadLine() ?? "";
@@ -45,13 +44,6 @@ namespace Tubes_KPL
                         userController.Logout();
                         break;
                     case "4":
-                        Console.Write("Masukkan username yang ingin ditambahkan: ");
-                        string addUserUsername = Console.ReadLine() ?? "";
-                        Console.Write("Masukkan password untuk pengguna tersebut: ");
-                        string addUserPassword = Console.ReadLine() ?? "";
-                        userController.AddUser(addUserUsername, addUserPassword);
-                        break;
-                    case "5":
                         Console.WriteLine("\n=== Daftar Pengguna ===");
                         foreach (var username in userController.GetUsernames())
                         {
@@ -59,7 +51,7 @@ namespace Tubes_KPL
                         }
                         Console.WriteLine("(Password tidak ditampilkan untuk keamanan)");
                         break;
-                    case "6":
+                    case "5":
                         Console.WriteLine("Terima kasih!");
                         return;
                     default:
