@@ -144,6 +144,7 @@ namespace Tubes_KPL
                                         Console.Write("Masukkan nama tugas yang ingin dihapus: ");
                                         string taskNameToDelete = Console.ReadLine() ?? "";
 
+                                        // Pass the taskNameToDelete and loggedInUsername to the controller
                                         createTaskControllerForUser.DeleteTask(taskNameToDelete, loggedInUsername);
                                         break;
 

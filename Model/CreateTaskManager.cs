@@ -118,26 +118,52 @@ namespace Tubes_KPL.Manager
 
         public bool DeleteTask(string taskName, string userId)
         {
-            // Pre-condition: taskName dan userId tidak boleh null atau kosong
-            Debug.Assert(!string.IsNullOrEmpty(taskName), "Pre-condition: taskName tidak boleh null atau kosong dalam DeleteTask");
-            Debug.Assert(!string.IsNullOrEmpty(userId), "Pre-condition: userId tidak boleh null atau kosong dalam DeleteTask");
-
+            // Defensive Programming: Validate input parameters
             if (string.IsNullOrEmpty(taskName) || string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine("taskName dan userId tidak boleh null atau kosong.");
-                return false;
+                return false; // Early exit if input parameters are invalid
             }
 
-            var task = tasks.FirstOrDefault(t => t.Name == taskName && t.UserId == userId);
-            if (task != null)
+            // Design by Contract: Pre-condition assertion to validate inputs
+            Debug.Assert(!string.IsNullOrEmpty(taskName), "Pre-condition: taskName tidak boleh kosong dalam DeleteTask");
+            Debug.Assert(!string.IsNullOrEmpty(userId), "Pre-condition: userId tidak boleh kosong dalam DeleteTask");
+
+            // Debugging: Log the attempt to delete the task
+            Debug.WriteLine($"Attempting to delete task: taskName = {taskName}, userId = {userId}");
+
+            try
             {
-                tasks.Remove(task); // Hapus tugas dari list
-                SaveTasks(); // Simpan perubahan ke file
-                return true;
+                var task = tasks.FirstOrDefault(t => t.Name == taskName && t.UserId == userId);
+
+
+
+                if (task != null)
+                {
+                    tasks.Remove(task); // Remove the task from the list
+                    SaveTasks(); // Save changes to file
+
+                    // Design by Contract: Ensure the task is successfully removed
+                    Debug.Assert(!tasks.Contains(task), "Post-condition: task harus sudah dihapus setelah RemoveTask");
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            Console.WriteLine("Tugas tidak ditemukan.");
-            return false;
+            catch (Exception ex)
+            {
+                // Design by Contract: Handle unexpected errors and ensure the invariants are not broken
+                Console.WriteLine($"Terjadi kesalahan saat menghapus tugas: {ex.Message}");
+                Debug.WriteLine($"Exception in DeleteTask: {ex}"); // Log exception details
+
+                return false; // Ensure method returns false in case of error
+            }
         }
+
+
 
     }
 }

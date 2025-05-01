@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Tubes_KPL.Model;
 using Tubes_KPL.Manager;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Tubes_KPL.Controller
 {
@@ -122,35 +123,46 @@ namespace Tubes_KPL.Controller
 
         public void DeleteTask(string taskName, string userId)
         {
-            // Defensive Programming: Validasi parameter
+            // Defensive Programming: Validating input parameters
             if (string.IsNullOrEmpty(taskName))
             {
                 Console.WriteLine("Nama tugas tidak boleh kosong.");
-                return;
+                return; // Early return if precondition is violated
             }
             if (string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine("User ID tidak boleh kosong.");
-                return;
+                return; // Early return if precondition is violated
             }
+
+            // Design by Contract: Precondition check using assertion
+            Debug.Assert(!string.IsNullOrEmpty(taskName), "Pre-condition: taskName tidak boleh kosong dalam DeleteTask");
+            Debug.Assert(!string.IsNullOrEmpty(userId), "Pre-condition: userId tidak boleh kosong dalam DeleteTask");
 
             try
             {
+                // Call Manager to delete the task
                 bool deleted = taskManager.DeleteTask(taskName, userId);
+
+
                 if (deleted)
                 {
                     Console.WriteLine("Tugas berhasil dihapus!");
                 }
                 else
                 {
-                    Console.WriteLine("Tugas tidak ditemukan atau gagal dihapus.");
+                    Console.WriteLine("Tugas gagal dihapus atau tidak ditemukan.");
                 }
+
+                // Debugging: Log the result of deletion
+                Debug.WriteLine($"DeleteTask: taskName = {taskName}, userId = {userId}, task deleted: {deleted}");
+
             }
             catch (Exception ex)
             {
-                // Defensive Programming: Tangkap dan log exception
+                // Design by Contract: Exception handling for invariants
                 Console.WriteLine($"Terjadi kesalahan saat menghapus tugas: {ex.Message}");
-                Debug.WriteLine($"Exception in DeleteTask: {ex}");
+                Debug.WriteLine($"Exception in DeleteTask: {ex}"); // Log exception details
             }
         }
 
