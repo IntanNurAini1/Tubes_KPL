@@ -1,9 +1,10 @@
 ﻿using System;
-using Tubes_KPL.Controller;
-using Tubes_KPL.Model;
-using Tubes_KPL.Manager;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using Tubes_KPL.Controller;
+using Tubes_KPL.Manager;
+using Tubes_KPL.Model;
 
 namespace Tubes_KPL
 {
@@ -11,6 +12,9 @@ namespace Tubes_KPL
     {
         static void Main(string[] args)
         {
+            // Menampilkan debug output (jika diperlukan di IDE)
+            Debug.WriteLine("Program dimulai");
+
             var userManager = new UserManager();
             var userController = new UserController(userManager);
 
@@ -22,7 +26,6 @@ namespace Tubes_KPL
                 Console.WriteLine("2. Login");
                 Console.WriteLine("3. Keluar");
                 Console.Write("Pilih opsi: ");
-
                 string choice = Console.ReadLine() ?? "";
 
                 switch (choice)
@@ -44,9 +47,15 @@ namespace Tubes_KPL
 
                         if (userController.GetCurrentState() == State.LoggedIn)
                         {
+                            var createTaskManager = new CreateTaskManager<Model.Task>();
+                            var createTaskController = new CreateTaskController<Model.Task>(createTaskManager);
                             string loggedInUsername = loginUsername;
-                            var createTaskManagerForUser = new CreateTaskManager<Model.Task>();
-                            var createTaskControllerForUser = new CreateTaskController<Model.Task>(createTaskManagerForUser);
+
+                            var userTasks = createTaskController.GetTasks(loggedInUsername);
+
+                            // ✅ Set konfigurasi dan reminder pertama kali saat login
+                            Reminder.SetConfig(new ReminderConfig());
+                            Reminder.CekDanUpdateTugasHampirDeadline(userTasks);
 
                             bool loggedIn = true;
                             while (loggedIn)
@@ -60,7 +69,6 @@ namespace Tubes_KPL
                                 Console.WriteLine("5. Tandai Tugas Selesai");
                                 Console.WriteLine("6. Logout");
                                 Console.Write("Pilih opsi: ");
-
                                 string loggedInChoice = Console.ReadLine() ?? "";
 
                                 switch (loggedInChoice)
@@ -68,43 +76,39 @@ namespace Tubes_KPL
                                     case "1":
                                         Console.WriteLine("\n=== Buat Tugas Baru ===");
                                         Console.Write("Masukkan nama tugas: ");
-                                        string taskName = Console.ReadLine() ?? "";
+                                        string name = Console.ReadLine() ?? "";
                                         Console.Write("Masukkan deskripsi tugas: ");
-                                        string taskDeskripsi = Console.ReadLine() ?? "";
+                                        string desc = Console.ReadLine() ?? "";
+
                                         Console.WriteLine("Masukkan deadline tugas:");
-                                        Console.Write("Tanggal (DD): ");
-                                        int taskDay = int.Parse(Console.ReadLine() ?? "0");
-                                        Console.Write("Bulan (MM): ");
-                                        int taskMonth = int.Parse(Console.ReadLine() ?? "0");
-                                        Console.Write("Tahun (YYYY): ");
-                                        int taskYear = int.Parse(Console.ReadLine() ?? "0");
-                                        Console.Write("Jam (HH): ");
-                                        int taskHour = int.Parse(Console.ReadLine() ?? "0");
-                                        Console.Write("Menit (MM): ");
-                                        int taskMinute = int.Parse(Console.ReadLine() ?? "0");
+                                        int day = GetIntInput("Tanggal (DD): ");
+                                        int month = GetIntInput("Bulan (MM): ");
+                                        int year = GetIntInput("Tahun (YYYY): ");
+                                        int hour = GetIntInput("Jam (HH): ");
+                                        int minute = GetIntInput("Menit (MM): ");
 
-                                        var deadline = new Deadline
-                                        {
-                                            Day = taskDay,
-                                            Month = taskMonth,
-                                            Year = taskYear,
-                                            Hour = taskHour,
-                                            Minute = taskMinute
-                                        };
+                                        var deadline = new Deadline { Day = day, Month = month, Year = year, Hour = hour, Minute = minute };
 
-                                        createTaskControllerForUser.CreateTask(taskName, taskDeskripsi, deadline, loggedInUsername);
+                                        Debug.Assert(!string.IsNullOrWhiteSpace(name), "Nama tugas tidak boleh kosong!");
+                                        createTaskController.CreateTask(name, desc, deadline, loggedInUsername);
                                         break;
 
                                     case "2":
                                         Console.WriteLine("\n=== Daftar Tugas Anda ===");
-                                        List<Model.Task> userTasks = createTaskControllerForUser.GetTasks(loggedInUsername);
-                                        if (userTasks.Count == 0)
+                                        var tasks = createTaskController.GetTasks(loggedInUsername);
+
+                                        if (tasks.Count == 0)
                                         {
                                             Console.WriteLine("Belum ada tugas yang ditambahkan.");
                                         }
                                         else
                                         {
-                                            foreach (var task in userTasks)
+                                            var sorted = tasks
+                                                .OrderBy(t => t.Status == Status.Incompleted ? 0 :
+                                                              t.Status == Status.Overdue ? 1 : 2)
+                                                .ThenBy(t => new DateTime(t.Deadline.Year, t.Deadline.Month, t.Deadline.Day, t.Deadline.Hour, t.Deadline.Minute, 0));
+
+                                            foreach (var task in sorted)
                                             {
                                                 Console.WriteLine($"Nama: {task.Name}, Deskripsi: {task.Description}, Deadline: {task.Deadline}, Status: {task.Status}");
                                             }
@@ -113,12 +117,11 @@ namespace Tubes_KPL
 
                                     case "3":
                                         Console.WriteLine("\n=== Edit Tugas ===");
-                                        Console.Write("Masukkan Nama tugas yang ingin diedit: ");
-                                        string taskNameToEdit = Console.ReadLine() ?? "";
+                                        Console.Write("Masukkan nama tugas yang ingin diedit: ");
+                                        string taskToEdit = Console.ReadLine() ?? "";
 
                                         Console.Write("Nama baru (kosongkan jika tidak ingin mengubah): ");
                                         string newName = Console.ReadLine();
-
                                         Console.Write("Deskripsi baru (kosongkan jika tidak ingin mengubah): ");
                                         string newDesc = Console.ReadLine();
 
@@ -127,34 +130,29 @@ namespace Tubes_KPL
                                         Deadline newDeadline = null;
                                         if (changeDeadline.ToLower() == "y")
                                         {
-                                            Console.Write("Tanggal (DD): ");
-                                            int day = int.Parse(Console.ReadLine() ?? "0");
-                                            Console.Write("Bulan (MM): ");
-                                            int month = int.Parse(Console.ReadLine() ?? "0");
-                                            Console.Write("Tahun (YYYY): ");
-                                            int year = int.Parse(Console.ReadLine() ?? "0");
-                                            Console.Write("Jam (HH): ");
-                                            int hour = int.Parse(Console.ReadLine() ?? "0");
-                                            Console.Write("Menit (MM): ");
-                                            int minute = int.Parse(Console.ReadLine() ?? "0");
-                                            newDeadline = new Deadline { Day = day, Month = month, Year = year, Hour = hour, Minute = minute };
+                                            int d = GetIntInput("Tanggal (DD): ");
+                                            int m = GetIntInput("Bulan (MM): ");
+                                            int y = GetIntInput("Tahun (YYYY): ");
+                                            int h = GetIntInput("Jam (HH): ");
+                                            int min = GetIntInput("Menit (MM): ");
+                                            newDeadline = new Deadline { Day = d, Month = m, Year = y, Hour = h, Minute = min };
                                         }
 
-                                        createTaskControllerForUser.EditTask(taskNameToEdit, loggedInUsername, newName, newDesc, newDeadline);
+                                        createTaskController.EditTask(taskToEdit, loggedInUsername, newName, newDesc, newDeadline);
                                         break;
 
                                     case "4":
                                         Console.WriteLine("\n=== Hapus Tugas ===");
                                         Console.Write("Masukkan nama tugas yang ingin dihapus: ");
-                                        string taskNameToDelete = Console.ReadLine() ?? "";
-                                        createTaskControllerForUser.DeleteTask(taskNameToDelete, loggedInUsername);
+                                        string taskToDelete = Console.ReadLine() ?? "";
+                                        createTaskController.DeleteTask(taskToDelete, loggedInUsername);
                                         break;
 
                                     case "5":
                                         Console.WriteLine("\n=== Tandai Tugas Selesai ===");
                                         Console.Write("Masukkan nama tugas yang ingin ditandai selesai: ");
                                         string taskToComplete = Console.ReadLine() ?? "";
-                                        createTaskControllerForUser.MarkTaskAsCompleted(taskToComplete, loggedInUsername);
+                                        createTaskController.MarkTaskAsCompleted(taskToComplete, loggedInUsername);
                                         break;
 
                                     case "6":
@@ -166,12 +164,18 @@ namespace Tubes_KPL
                                         Console.WriteLine("Opsi tidak valid. Silakan coba lagi.");
                                         break;
                                 }
+
+                                if (loggedIn)
+                                {
+                                    userTasks = createTaskController.GetTasks(loggedInUsername);
+                                    Reminder.CekDanUpdateTugasHampirDeadline(userTasks);
+                                }
                             }
                         }
                         break;
 
                     case "3":
-                        Console.WriteLine("Terima kasih!");
+                        Console.WriteLine("Terima kasih telah menggunakan aplikasi ini!");
                         return;
 
                     default:
@@ -179,6 +183,17 @@ namespace Tubes_KPL
                         break;
                 }
             }
+        }
+
+        static int GetIntInput(string prompt)
+        {
+            Console.Write(prompt);
+            int value;
+            while (!int.TryParse(Console.ReadLine(), out value))
+            {
+                Console.Write("Input tidak valid. Coba lagi: ");
+            }
+            return value;
         }
     }
 }
