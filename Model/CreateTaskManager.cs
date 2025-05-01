@@ -11,15 +11,16 @@ namespace Tubes_KPL.Manager
     public class CreateTaskManager<T> where T : Model.Task
     {
         private List<T> tasks = new List<T>();
-        private readonly string _filePath = "tasks.json"; // Nama file untuk menyimpan data
+        private readonly string _filePath = "tasks.json";
 
         public CreateTaskManager()
         {
-            LoadTasks(); // Load data saat inisialisasi manajer
+            LoadTasks();
         }
 
         public void AddTask(T task)
         {
+            // Pre-condition: Task tidak boleh null
             Debug.Assert(task != null, "Pre-condition: task tidak boleh null dalam AddTask");
             if (task == null)
             {
@@ -34,39 +35,44 @@ namespace Tubes_KPL.Manager
 
         public List<T> GetTasks(string userId)
         {
+            // Pre-condition: userId tidak boleh null atau kosong
             Debug.Assert(!string.IsNullOrEmpty(userId), "Pre-condition: userId tidak boleh null atau kosong dalam GetTasks");
             if (string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine("User ID tidak boleh null atau kosong.");
-                return new List<T>();
+                return new List<T>(); // Mengembalikan list kosong daripada null
             }
             var result = tasks.Where(task => task.UserId == userId).ToList();
+            // Post-condition: result tidak boleh null
             Debug.Assert(result != null, "Post-condition: result tidak boleh null dalam GetTasks");
             return result;
         }
 
         public List<T> GetAllTasks()
         {
+            // Post-condition: Tidak ada post-condition khusus, tapi memastikan tidak mengembalikan null
             Debug.Assert(tasks != null, "Post-condition: tasks tidak boleh null dalam GetAllTasks");
             return tasks;
         }
 
-        public bool UpdateTask(string taskId, Action<T> updateAction)
+        public bool UpdateTask(string taskName, string userId, Action<T> updateAction)
         {
-            Debug.Assert(!string.IsNullOrEmpty(taskId), "Pre-condition: taskId tidak boleh null atau kosong dalam UpdateTask");
+            // Pre-condition
+            Debug.Assert(!string.IsNullOrEmpty(taskName), "Pre-condition: taskName tidak boleh null atau kosong dalam UpdateTask");
             Debug.Assert(updateAction != null, "Pre-condition: updateAction tidak boleh null dalam UpdateTask");
+            Debug.Assert(!string.IsNullOrEmpty(userId), "Pre-condition: userId tidak boleh null atau kosong dalam UpdateTask");
 
-            if (string.IsNullOrEmpty(taskId) || updateAction == null)
+            if (string.IsNullOrEmpty(taskName) || updateAction == null || string.IsNullOrEmpty(userId))
             {
-                Console.WriteLine("taskId dan updateAction tidak boleh null atau kosong.");
+                Console.WriteLine("taskName, userId, dan updateAction tidak boleh null atau kosong.");
                 return false;
             }
 
-            var task = tasks.FirstOrDefault(t => t.Id == taskId);
+            var task = tasks.FirstOrDefault(t => t.Name == taskName && t.UserId == userId);
             if (task != null)
             {
-                updateAction(task);
-                SaveTasks(); // Simpan data setelah mengubah tugas
+                updateAction(task); // Memakai lambda agar reusable
+                SaveTasks(); // Simpan perubahan
                 return true;
             }
             return false;
@@ -84,7 +90,7 @@ namespace Tubes_KPL.Manager
             catch (Exception ex)
             {
                 Console.WriteLine($"Gagal menyimpan tugas ke file: {ex.Message}");
-                Debug.WriteLine($"Exception in SaveTasks: {ex}");
+                Debug.WriteLine($"Exception in SaveTasks: {ex}"); // Log exception
             }
         }
 

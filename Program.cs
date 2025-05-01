@@ -2,6 +2,7 @@
 using Tubes_KPL.Controller;
 using Tubes_KPL.Model;
 using Tubes_KPL.Manager;
+using System.Diagnostics;
 
 namespace Tubes_KPL
 {
@@ -52,7 +53,8 @@ namespace Tubes_KPL
                                 Console.WriteLine($"Selamat datang, {loggedInUsername}!");
                                 Console.WriteLine("1. Buat Tugas Baru");
                                 Console.WriteLine("2. Lihat Daftar Tugas Saya");
-                                Console.WriteLine("3. Logout");
+                                Console.WriteLine("3. Edit Tugas");
+                                Console.WriteLine("4. Logout");
                                 Console.Write("Pilih opsi: ");
 
                                 string loggedInChoice = Console.ReadLine() ?? "";
@@ -90,16 +92,53 @@ namespace Tubes_KPL
                                         break;
                                     case "2":
                                         Console.WriteLine("\n=== Daftar Tugas Anda ===");
-                                        foreach (var task in createTaskControllerForUser.GetTasks(loggedInUsername))
-                                        {
-                                            Console.WriteLine(task);
-                                        }
-                                        if (createTaskControllerForUser.GetTasks(loggedInUsername).Count == 0)
+                                        List<Model.Task> userTasks = createTaskControllerForUser.GetTasks(loggedInUsername);
+                                        if (userTasks.Count == 0)
                                         {
                                             Console.WriteLine("Belum ada tugas yang ditambahkan.");
                                         }
+                                        else
+                                        {
+                                            foreach (var task in userTasks)
+                                            {
+                                                // Menampilkan detail tugas, termasuk ID-nya.
+                                                Console.WriteLine($"Nama: {task.Name}, Deskripsi: {task.Description}, Deadline: {task.Deadline}");
+                                            }
+                                        }
                                         break;
                                     case "3":
+                                        Console.WriteLine("\n=== Edit Tugas ===");
+                                        Console.Write("Masukkan Nama tugas yang ingin diedit: ");
+                                        string taskNameToEdit = Console.ReadLine() ?? "";
+                                        // Pastikan user tahu ID yang mana yang harus dimasukkan
+                                        Console.WriteLine("Masukkan Nama tugas yang ingin diedit (lihat daftar tugas untuk Nama Tugas).");
+                                        Console.Write("Nama baru (kosongkan jika tidak ingin mengubah): ");
+                                        string newName = Console.ReadLine();
+
+                                        Console.Write("Deskripsi baru (kosongkan jika tidak ingin mengubah): ");
+                                        string newDesc = Console.ReadLine();
+
+                                        Console.Write("Ubah deadline? (y/n): ");
+                                        string changeDeadline = Console.ReadLine() ?? "";
+
+                                        Deadline newDeadline = null;
+                                        if (changeDeadline.ToLower() == "y")
+                                        {
+                                            Console.Write("Tanggal (DD): ");
+                                            int day = int.Parse(Console.ReadLine() ?? "0");
+                                            Console.Write("Bulan (MM): ");
+                                            int month = int.Parse(Console.ReadLine() ?? "0");
+                                            Console.Write("Tahun (YYYY): ");
+                                            int year = int.Parse(Console.ReadLine() ?? "0");
+                                            Console.Write("Jam (HH): ");
+                                            int hour = int.Parse(Console.ReadLine() ?? "0");
+                                            Console.Write("Menit (MM): ");
+                                            int minute = int.Parse(Console.ReadLine() ?? "0");
+                                            newDeadline = new Deadline { Day = day, Month = month, Year = year, Hour = hour, Minute = minute };
+                                        }
+                                        createTaskControllerForUser.EditTask(taskNameToEdit, loggedInUsername, newName, newDesc, newDeadline);
+                                        break;
+                                    case "4":
                                         userController.Logout();
                                         loggedIn = false;
                                         break;

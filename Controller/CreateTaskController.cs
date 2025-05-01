@@ -12,6 +12,7 @@ namespace Tubes_KPL.Controller
 
         public CreateTaskController(CreateTaskManager<T> taskManager)
         {
+            // Defensive Programming:  Cek null di konstruktor
             if (taskManager == null)
             {
                 Debug.WriteLine("CreateTaskController: taskManager is null. Throwing ArgumentNullException.");
@@ -22,6 +23,7 @@ namespace Tubes_KPL.Controller
 
         public void CreateTask(string name, string description, Deadline deadline, string userId)
         {
+            // Defensive Programming: Validasi parameter
             if (string.IsNullOrEmpty(name))
             {
                 Console.WriteLine("Nama tugas tidak boleh kosong.");
@@ -45,19 +47,21 @@ namespace Tubes_KPL.Controller
 
             try
             {
-                T newTask = (T)Activator.CreateInstance(typeof(T), name, description, deadline, userId);
+                T newTask = (T)Activator.CreateInstance(typeof(T), name, description, deadline, userId); // Tambah userId ke instance
                 taskManager.AddTask(newTask);
                 Console.WriteLine("Tugas berhasil dibuat!");
             }
             catch (Exception ex)
             {
+                // Defensive Programming: Tangkap exception dan log
                 Console.WriteLine($"Terjadi kesalahan saat membuat tugas: {ex.Message}");
-                Debug.WriteLine($"Exception in CreateTask: {ex}");
+                Debug.WriteLine($"Exception in CreateTask: {ex}"); // Log exception
             }
         }
 
         public List<T> GetTasks(string userId)
         {
+            // Defensive Programming: userId tidak boleh null atau empty
             if (string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine("userId tidak boleh null atau empty");
@@ -72,12 +76,12 @@ namespace Tubes_KPL.Controller
             return tasks;
         }
 
-        public void EditTask(string taskId, string userId, string newName = null, string newDescription = null, Deadline newDeadline = null)
+        public void EditTask(string taskName, string userId, string newName = null, string newDescription = null, Deadline newDeadline = null)
         {
-            // Validasi input
-            if (string.IsNullOrEmpty(taskId))
+            // Defensive Programming: Validasi parameter
+            if (string.IsNullOrEmpty(taskName))
             {
-                Console.WriteLine("ID tugas tidak boleh kosong.");
+                Console.WriteLine("Nama Tugas tidak boleh kosong.");
                 return;
             }
             if (string.IsNullOrEmpty(userId))
@@ -88,12 +92,14 @@ namespace Tubes_KPL.Controller
 
             try
             {
-                bool updated = taskManager.UpdateTask(taskId, task =>
+                bool updated = taskManager.UpdateTask(taskName, userId, task =>
                 {
-                    if (task.UserId != userId)
+                    // Design by Contract: Pre-condition di dalam lambda
+                    Debug.Assert(task != null, "Pre-condition: task tidak boleh null di dalam lambda EditTask");
+                    if (task == null)
                     {
-                        Console.WriteLine("Kamu tidak bisa mengedit task milik orang lain.");
-                        return; // Penting: Keluar dari lambda expression
+                        Console.WriteLine("Task tidak ditemukan.");
+                        return;
                     }
 
                     if (!string.IsNullOrWhiteSpace(newName)) task.Name = newName;
@@ -108,6 +114,7 @@ namespace Tubes_KPL.Controller
             }
             catch (Exception ex)
             {
+                // Defensive Programming: Tangkap dan log exception
                 Console.WriteLine($"Terjadi kesalahan saat mengedit tugas: {ex.Message}");
                 Debug.WriteLine($"Exception in EditTask: {ex}");
             }
